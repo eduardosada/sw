@@ -1,0 +1,41 @@
+# Proyecto Blog
+
+1.  Instala las dependencias
+2.  Ejecuta el proyecto
+3.  Registra el service worker
+4.  Programa el service worker
+
+### 01. Instala las dependencias
+
+Ejecuta el siguiente comando en la terminal para instalar las dependencias.
+
+```sh
+$ npm i
+```
+
+### 02. Ejecuta el proyecto
+
+Ejecuta el siguiente comando en la terminal para correr el proyecto.
+
+```sh
+$ npm start
+```
+
+El comando devolverá la url que deberás copiar y pegar en la barra de direcciones de tu navegador preferido.
+
+Ejemplo:
+
+```sh
+Listening on port 3000
+Site is available on: http://localhost:3000
+```
+
+### 03. Registra el service worker
+
+Dentro de la carpeta `public` se encuentra el proyecto html.
+
+Empieza a programar el registro en el archivo `public/assets/js/sw-registration.js`
+
+### 04. Programa el service worker
+
+Una vez tengas el registro del service worker programado, escribe tu service worker en el archivo `public/sw.js`.

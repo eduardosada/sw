@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Worker</title>
+    <style>
+      .wrapper {
+        width: 500px;
+        height: 500px;
+        border: 4px solid;
+        margin: 0 auto;
+        position: relative;
+      }
+      #counter {
+        font-size: 40px;
+        font-weight: bold;
+        z-index: 1;
+        padding: 20px;
+        background: black;
+        border: 4px solid white;
+        color: white;
+        position: relative;
+        display: inline-flex;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        align-items: center;
+        justify-content: center;
+        left: calc(50% - 35px);
+        top: 350px;
+      }
+
+      #image {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .widget-reload:not([hidden]) {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        max-width: calc(100% - 40px);
+        padding: 20px;
+        border: 4px solid #6d4aff;
+        display: flex;
+        justify-content: center;
+        font-family: sans-serif;
+        font-size: 22px;
+        gap: 10px;
+      }
+
+      .widget-reload__link {
+        font-weight: bold;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      #version:not(:empty) {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        font-family: sans-serif;
+        font-size: 22px;
+        padding: 10px;
+        border: 4px solid #6d4aff;
+        background: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="counter">5</div>
+      <img id="image" src="" alt="" />
+    </div>
+    <!--
+    <div id="widget-reload" class="widget-reload" hidden>
+      <div class="widget-reload__message">Hay una nueva versión de la web</div>
+      <div class="widget-reload__link" onclick="window.postMessage('APP_RELOAD')">Recargar</div>
+    </div>
+
+    <div id="version"></div> -->
+  </body>
+  <script src="main.js"></script>
+
+  <script>
+    (async function () {
+      if ("serviceWorker" in navigator) {
+        //...
+      }
+    })();
+  </script>
+</html>

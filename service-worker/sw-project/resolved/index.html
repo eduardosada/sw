@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Worker</title>
+    <style>
+      .wrapper {
+        width: 500px;
+        height: 500px;
+        border: 4px solid;
+        margin: 0 auto;
+        position: relative;
+      }
+      #counter {
+        font-size: 40px;
+        font-weight: bold;
+        z-index: 1;
+        padding: 20px;
+        background: black;
+        border: 4px solid white;
+        color: white;
+        position: relative;
+        display: inline-flex;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        align-items: center;
+        justify-content: center;
+        left: calc(50% - 35px);
+        top: 350px;
+      }
+
+      #image {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .widget-reload:not([hidden]) {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        max-width: calc(100% - 40px);
+        padding: 20px;
+        border: 4px solid #6d4aff;
+        display: flex;
+        justify-content: center;
+        font-family: sans-serif;
+        font-size: 22px;
+        gap: 10px;
+      }
+
+      .widget-reload__link {
+        font-weight: bold;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      #version {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        font-family: sans-serif;
+        font-size: 22px;
+        padding: 10px;
+        border: 4px solid #6d4aff;
+        background: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="counter">5</div>
+      <img id="image" src="" alt="" />
+    </div>
+
+    <div id="widget-reload" class="widget-reload" hidden>
+      <div class="widget-reload__message">Hay una nueva versión de la web</div>
+      <div class="widget-reload__link" onclick="window.postMessage('APP_RELOAD')">Recargar</div>
+    </div>
+
+    <div id="version"></div>
+  </body>
+  <script src="main.js"></script>
+
+  <script>
+    (async function () {
+      if ("serviceWorker" in navigator) {
+        class ServiceWorker {
+          constructor(url) {
+            this.url = url;
+            this.promisedReg = navigator.serviceWorker.register(url);
+            this.onStateChange = this.onStateChange.bind(this);
+          }
+
+          addEventListener(type, cb, options) {
+            document.addEventListener("sw-" + type, cb, options);
+          }
+
+          async dispatchEvent(sw, type) {
+            const version = await this.getVersion(sw);
+            const event = new CustomEvent("sw-" + type);
+            event.version = version;
+            event.sw = sw;
+            document.dispatchEvent(event);
+          }
+
+          getVersion(sw) {
+            return new Promise((resolve) => {
+              if (sw.version) {
+                return resolve(sw.version);
+              }
+
+              const channel = new MessageChannel();
+
+              channel.port1.onmessage = ({ data: version }) => {
+                sw.version = version;
+                resolve(version);
+              };
+
+              sw.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+            });
+          }
+
+          onStateChange({ target }) {
+            if (target.state === "installed") {
+              this.dispatchEvent(target, "installed");
+            } else if (target.state === "activated") {
+              this.dispatchEvent(target, "activated");
+            } else if (target.state === "redundant") {
+              this.dispatchEvent(target, "redundant");
+            }
+          }
+
+          async register() {
+            const reg = await this.promisedReg;
+
+            if (reg.active) {
+              await navigator.serviceWorker.ready;
+              this.dispatchEvent(reg.active, "ready");
+              reg.active.addEventListener("statechange", this.onStateChange);
+            }
+
+            if (reg.waiting) {
+              this.dispatchEvent(reg.waiting, "waiting");
+              reg.waiting.addEventListener("statechange", this.onStateChange);
+            }
+
+            reg.addEventListener("updatefound", () => {
+              if (reg.installing) {
+                reg.installing.addEventListener("statechange", this.onStateChange);
+              }
+            });
+
+            return reg;
+          }
+        }
+
+        const sw = new ServiceWorker("sw.js");
+
+        sw.addEventListener("redundant", ({ sw, version }) => {
+          console.log(
+            "%c%s%cv%s",
+            "background: #fabada; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            "Service Worker",
+            "background: #f00; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            version,
+            "Redundant",
+            sw.scriptURL
+          );
+        });
+
+        sw.addEventListener("installed", ({ sw, version }) => {
+          console.log(
+            "%c%s%cv%s",
+            "background: #fabada; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            "Service Worker",
+            "background: #5ad; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            version,
+            "Installed",
+            sw.scriptURL
+          );
+
+          document.getElementById("widget-reload").removeAttribute("hidden");
+        });
+
+        sw.addEventListener("waiting", ({ sw, version }) => {
+          console.log(
+            "%c%s%cv%s",
+            "background: #fabada; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            "Service Worker",
+            "background: #fb1; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            version,
+            "Waiting for activation",
+            sw.scriptURL
+          );
+        });
+
+        sw.addEventListener("activated", ({ sw, version }) => {
+          console.log(
+            "%c%s%cv%s",
+            "background: #fabada; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            "Service Worker",
+            "background: #bada55; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            version,
+            "Activated",
+            sw.scriptURL
+          );
+        });
+
+        sw.addEventListener("ready", ({ sw, version }) => {
+          console.log(
+            "%c%s%cv%s",
+            "background: #fabada; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            "Service Worker",
+            "background: #bada55; padding: 4px; border-radius: 4px; margin-right: 4px;",
+            version,
+            "Ready",
+            sw.scriptURL
+          );
+
+          document.getElementById("version").textContent = "v" + version;
+        });
+
+        const reg = await sw.register();
+
+        setInterval(() => {
+          reg.update();
+        }, 10000);
+
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          if (event.data === "RELOAD") {
+            window.location.reload();
+          }
+        });
+
+        window.addEventListener("message", (event) => {
+          if (event.data === "APP_RELOAD") {
+            reg.waiting.postMessage({ type: "ACTIVATE" });
+          }
+        });
+      }
+    })();
+  </script>
+</html>
